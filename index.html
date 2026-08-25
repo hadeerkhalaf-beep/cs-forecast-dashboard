@@ -88,7 +88,7 @@
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:17</span>
+  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:26</span>
 </div>
 
 <!-- Filters -->
@@ -540,26 +540,51 @@ function buildDailyTable() {
 }
 
 // ── Weekly accuracy table ─────────────────────────────────────────────────────
-function weekStart(dateStr) {
+
+// Return Monday of the week containing dateStr
+function weekMonday(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDay(); // 0=Sun
-  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0,10);
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+  return d.toISOString().slice(0, 10);
 }
 
-function weekEnd(ws) {
-  const d = new Date(ws + 'T00:00:00');
-  d.setDate(d.getDate() + 6);
-  return d.toISOString().slice(0,10);
+// ISO week number (W01–W53) using the Thursday-of-the-week rule
+function isoWeekNum(weekStartStr) {
+  const thu = new Date(weekStartStr + 'T00:00:00');
+  thu.setDate(thu.getDate() + 3); // Thursday is always in the right ISO year
+  const yearStart = new Date(thu.getFullYear(), 0, 1);
+  return Math.ceil(((thu - yearStart) / 86400000 + 1) / 7);
+}
+
+// Assign a cross-month week to whichever month holds more of its 7 days
+function dominantMonth(weekStartStr) {
+  const mon = new Date(weekStartStr + 'T00:00:00');
+  const sun = new Date(weekStartStr + 'T00:00:00');
+  sun.setDate(mon.getDate() + 6);
+  if (mon.getMonth() === sun.getMonth()) {
+    return mon.getFullYear() + '-' + String(mon.getMonth() + 1).padStart(2, '0');
+  }
+  const lastOfFirst  = new Date(mon.getFullYear(), mon.getMonth() + 1, 0);
+  const daysInFirst  = lastOfFirst.getDate() - mon.getDate() + 1; // 1–6
+  const pick = daysInFirst >= (7 - daysInFirst) ? mon : sun;
+  return pick.getFullYear() + '-' + String(pick.getMonth() + 1).padStart(2, '0');
+}
+
+// Format "2026-08-24" -> "Aug 24"
+function fmtDay(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]
+         + ' ' + String(d.getDate()).padStart(2, '0');
 }
 
 function buildWeeklyTable() {
   const rows = filt(DAILY);
 
+  // Aggregate by week-Monday key
   const weekMap = {};
   rows.forEach(r => {
-    const ws = weekStart(r.Date);
+    const ws = weekMonday(r.Date);
     if (!weekMap[ws]) weekMap[ws] = {a:0, f:0};
     weekMap[ws].a += r.Actual_Sum;
     weekMap[ws].f += r.Forecast_Sum;
@@ -567,38 +592,46 @@ function buildWeeklyTable() {
 
   const weekKeys = Object.keys(weekMap).sort().reverse();
 
-  // Group weeks by month (month of the Monday/week-start)
+  // Group by dominant month
   const monthMap = {};
   weekKeys.forEach(ws => {
-    const m = ws.slice(0,7);
+    const m = dominantMonth(ws);
     if (!monthMap[m]) monthMap[m] = [];
     monthMap[m].push(ws);
   });
 
-  let html = '<thead><tr><th>Week (Mon – Sun)</th>'
-           + '<th class="text-end">Actual</th><th class="text-end">Forecast</th>'
-           + '<th class="text-center">Accuracy</th></tr></thead><tbody>';
+  let html = '<thead><tr>'
+           + '<th style="width:44px">Wk#</th>'
+           + '<th>Mon – Sun</th>'
+           + '<th class="text-end">Actual</th>'
+           + '<th class="text-end">Forecast</th>'
+           + '<th class="text-center">Accuracy</th>'
+           + '</tr></thead><tbody>';
 
   Object.keys(monthMap).sort().reverse().forEach(mk => {
     const [y, mo] = mk.split('-');
-    const weeks = monthMap[mk]; // already descending
-    const tot = weeks.reduce((s,ws) => ({a:s.a+weekMap[ws].a, f:s.f+weekMap[ws].f}), {a:0,f:0});
-    const monAcc = tot.f > 0 ? tot.a/tot.f*100 : 0;
-    // Month header row
+    const weeks   = monthMap[mk]; // already descending
+    const tot     = weeks.reduce((s,ws) => ({a:s.a+weekMap[ws].a, f:s.f+weekMap[ws].f}), {a:0,f:0});
+    const monAcc  = tot.f > 0 ? tot.a/tot.f*100 : 0;
+
+    // Month header (dark, spans Wk# + Mon–Sun columns)
     html += `<tr class="mon-hdr">
-      <td>${MON_NAMES[+mo]} ${y}</td>
+      <td colspan="2">${MON_NAMES[+mo]} ${y}</td>
       <td class="text-end">${fmt(tot.a)}</td>
       <td class="text-end">${fmt(tot.f)}</td>
       <td class="text-center">${badge(monAcc)}</td>
     </tr>`;
-    // Week rows
+
     weeks.forEach(ws => {
-      const we = weekEnd(ws);
+      const sunDate = new Date(ws + 'T00:00:00');
+      sunDate.setDate(sunDate.getDate() + 6);
+      const sunStr = sunDate.toISOString().slice(0, 10);
       const {a, f} = weekMap[ws];
       const ac = f > 0 ? a/f*100 : 0;
-      const label = ws.slice(5) + ' – ' + we.slice(5);
+      const wn = String(isoWeekNum(ws)).padStart(2, '0');
       html += `<tr>
-        <td>${label}</td>
+        <td style="color:#6c757d;font-size:.74rem;font-weight:600">W${wn}</td>
+        <td style="white-space:nowrap">${fmtDay(ws)} – ${fmtDay(sunStr)}</td>
         <td class="text-end">${fmt(a)}</td>
         <td class="text-end">${fmt(f)}</td>
         <td class="text-center">${badge(ac)}</td>
