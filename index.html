@@ -88,7 +88,7 @@
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:47</span>
+  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-26 00:04</span>
 </div>
 
 <!-- Filters -->
@@ -588,33 +588,21 @@ function fmtDay(dateStr) {
 function buildWeeklyTable() {
   const rows = filt(DAILY);
 
-  // Only show months that actually have data — same rule as the daily table
-  const validMonths = new Set(rows.map(r => r.Date.slice(0, 7)));
-
-  // Aggregate by week-Monday key; track count of data dates per month per week
-  const weekMap   = {};
-  const weekDates = {}; // ws -> { monthKey -> count of data dates }
+  // Aggregate by week-Monday key
+  const weekMap = {};
   rows.forEach(r => {
     const ws = weekMonday(r.Date);
-    if (!weekMap[ws]) { weekMap[ws] = {a:0, f:0}; weekDates[ws] = {}; }
+    if (!weekMap[ws]) weekMap[ws] = {a:0, f:0};
     weekMap[ws].a += r.Actual_Sum;
     weekMap[ws].f += r.Forecast_Sum;
-    const mk = r.Date.slice(0, 7);
-    weekDates[ws][mk] = (weekDates[ws][mk] || 0) + 1;
   });
 
   const weekKeys = Object.keys(weekMap).sort().reverse();
 
-  // Assign each week to the valid month with the most data dates.
-  // Filtering by validMonths ensures we never create a section for a month
-  // (e.g. January) that has no data in the daily table.
+  // Group by calendar-dominant month (whichever month holds more of the 7 days)
   const monthMap = {};
   weekKeys.forEach(ws => {
-    const sorted = Object.entries(weekDates[ws])
-                     .filter(([k]) => validMonths.has(k))
-                     .sort((a,b) => b[1]-a[1] || b[0].localeCompare(a[0]));
-    if (!sorted.length) return; // all data in an excluded month — skip
-    const m = sorted[0][0];
+    const m = dominantMonth(ws);
     if (!monthMap[m]) monthMap[m] = [];
     monthMap[m].push(ws);
   });
