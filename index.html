@@ -69,6 +69,10 @@
   .legend { display:flex; gap:12px; align-items:center; font-size:.75rem; margin-top:8px; }
   .leg-box { width:14px; height:14px; border-radius:3px; display:inline-block; }
 
+  /* Month header rows in daily/weekly tables */
+  .tbl .mon-hdr td { background:#16213e; color:#fff; font-weight:700; font-size:.8rem; letter-spacing:.03em; }
+  .tbl .week-row td { background:#f0f2f5; font-weight:600; font-size:.79rem; color:#16213e; }
+
   /* Date filter month groups */
   .ms-month-row { display:flex; align-items:center; background:#f0f2f5; border-top:1px solid #e9ecef; }
   .ms-month-row:first-child { border-top:none; }
@@ -84,7 +88,7 @@
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:09</span>
+  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:17</span>
 </div>
 
 <!-- Filters -->
@@ -220,7 +224,7 @@
   </div>
 
   <!-- Detail table -->
-  <div class="row g-3 mb-5">
+  <div class="row g-3 mb-4">
     <div class="col-12">
       <div class="card-box">
         <h6>Accuracy Detail — LOB × Queue × Language</h6>
@@ -233,6 +237,26 @@
             </tr></thead>
             <tbody id="tBody"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily by month + Weekly tables -->
+  <div class="row g-3 mb-5">
+    <div class="col-md-8">
+      <div class="card-box">
+        <h6>Daily Accuracy by Month</h6>
+        <div style="max-height:520px;overflow-y:auto">
+          <table class="table table-sm table-hover tbl mb-0" id="tDailyMon"></table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-box">
+        <h6>Weekly Accuracy</h6>
+        <div style="max-height:520px;overflow-y:auto">
+          <table class="table table-sm table-hover tbl mb-0" id="tWeekly"></table>
         </div>
       </div>
     </div>
@@ -457,6 +481,135 @@ function buildHeatmap() {
   document.getElementById('hmTable').innerHTML = html;
 }
 
+// ── Daily accuracy table (grouped by month, most recent first) ────────────────
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON_NAMES = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
+                   7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'};
+
+function buildDailyTable() {
+  const rows = filt(DAILY);
+
+  // Aggregate by Date
+  const dateMap = {};
+  rows.forEach(r => {
+    if (!dateMap[r.Date]) dateMap[r.Date] = {a:0, f:0};
+    dateMap[r.Date].a += r.Actual_Sum;
+    dateMap[r.Date].f += r.Forecast_Sum;
+  });
+
+  // Group dates by month
+  const monthMap = {};
+  Object.keys(dateMap).sort().forEach(d => {
+    const m = d.slice(0,7);
+    if (!monthMap[m]) monthMap[m] = [];
+    monthMap[m].push(d);
+  });
+
+  let html = '<thead><tr><th>Date</th><th>Day</th>'
+           + '<th class="text-end">Actual</th><th class="text-end">Forecast</th>'
+           + '<th class="text-center">Accuracy</th></tr></thead><tbody>';
+
+  Object.keys(monthMap).sort().reverse().forEach(mk => {
+    const [y, mo] = mk.split('-');
+    const dates = monthMap[mk].slice().reverse(); // newest day first
+    const tot = dates.reduce((s,d) => ({a:s.a+dateMap[d].a, f:s.f+dateMap[d].f}), {a:0,f:0});
+    const monAcc = tot.f > 0 ? tot.a/tot.f*100 : 0;
+    // Month header row (dark)
+    html += `<tr class="mon-hdr">
+      <td colspan="2">${MON_NAMES[+mo]} ${y}</td>
+      <td class="text-end">${fmt(tot.a)}</td>
+      <td class="text-end">${fmt(tot.f)}</td>
+      <td class="text-center">${badge(monAcc)}</td>
+    </tr>`;
+    // Day rows
+    dates.forEach(d => {
+      const {a, f} = dateMap[d];
+      const ac = f > 0 ? a/f*100 : 0;
+      const dayName = DAY_NAMES[new Date(d + 'T00:00:00').getDay()];
+      html += `<tr>
+        <td>${d}</td><td style="color:#6c757d">${dayName}</td>
+        <td class="text-end">${fmt(a)}</td>
+        <td class="text-end">${fmt(f)}</td>
+        <td class="text-center">${badge(ac)}</td>
+      </tr>`;
+    });
+  });
+
+  html += '</tbody>';
+  document.getElementById('tDailyMon').innerHTML = html;
+}
+
+// ── Weekly accuracy table ─────────────────────────────────────────────────────
+function weekStart(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0,10);
+}
+
+function weekEnd(ws) {
+  const d = new Date(ws + 'T00:00:00');
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().slice(0,10);
+}
+
+function buildWeeklyTable() {
+  const rows = filt(DAILY);
+
+  const weekMap = {};
+  rows.forEach(r => {
+    const ws = weekStart(r.Date);
+    if (!weekMap[ws]) weekMap[ws] = {a:0, f:0};
+    weekMap[ws].a += r.Actual_Sum;
+    weekMap[ws].f += r.Forecast_Sum;
+  });
+
+  const weekKeys = Object.keys(weekMap).sort().reverse();
+
+  // Group weeks by month (month of the Monday/week-start)
+  const monthMap = {};
+  weekKeys.forEach(ws => {
+    const m = ws.slice(0,7);
+    if (!monthMap[m]) monthMap[m] = [];
+    monthMap[m].push(ws);
+  });
+
+  let html = '<thead><tr><th>Week (Mon – Sun)</th>'
+           + '<th class="text-end">Actual</th><th class="text-end">Forecast</th>'
+           + '<th class="text-center">Accuracy</th></tr></thead><tbody>';
+
+  Object.keys(monthMap).sort().reverse().forEach(mk => {
+    const [y, mo] = mk.split('-');
+    const weeks = monthMap[mk]; // already descending
+    const tot = weeks.reduce((s,ws) => ({a:s.a+weekMap[ws].a, f:s.f+weekMap[ws].f}), {a:0,f:0});
+    const monAcc = tot.f > 0 ? tot.a/tot.f*100 : 0;
+    // Month header row
+    html += `<tr class="mon-hdr">
+      <td>${MON_NAMES[+mo]} ${y}</td>
+      <td class="text-end">${fmt(tot.a)}</td>
+      <td class="text-end">${fmt(tot.f)}</td>
+      <td class="text-center">${badge(monAcc)}</td>
+    </tr>`;
+    // Week rows
+    weeks.forEach(ws => {
+      const we = weekEnd(ws);
+      const {a, f} = weekMap[ws];
+      const ac = f > 0 ? a/f*100 : 0;
+      const label = ws.slice(5) + ' – ' + we.slice(5);
+      html += `<tr>
+        <td>${label}</td>
+        <td class="text-end">${fmt(a)}</td>
+        <td class="text-end">${fmt(f)}</td>
+        <td class="text-center">${badge(ac)}</td>
+      </tr>`;
+    });
+  });
+
+  html += '</tbody>';
+  document.getElementById('tWeekly').innerHTML = html;
+}
+
 // ── Refresh ───────────────────────────────────────────────────────────────────
 function refresh() {
   // Use DAILY (has Date field) so date filter applies to KPIs, charts, and table
@@ -523,6 +676,8 @@ function refresh() {
     });
 
   buildHeatmap();
+  buildDailyTable();
+  buildWeeklyTable();
 }
 
 function resetFilters() {
@@ -571,6 +726,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   buildHeatmap();
+  buildDailyTable();
+  buildWeeklyTable();
   refresh();
 });
 </script>
