@@ -88,7 +88,7 @@
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-26 00:04</span>
+  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-26 00:12</span>
 </div>
 
 <!-- Filters -->
@@ -196,12 +196,23 @@
     </div>
   </div>
 
-  <!-- Daily trend -->
+  <!-- Monthly achievement + Day-of-week charts -->
   <div class="row g-3 mb-4">
-    <div class="col-12">
+    <div class="col-md-7">
       <div class="card-box">
-        <h6>Daily Accuracy Trend &nbsp;<small class="fw-normal text-muted">(dashed red = 100% target)</small></h6>
-        <canvas id="cDaily" height="85"></canvas>
+        <h6>Monthly Target Achievement &nbsp;<small class="fw-normal text-muted">% of days Under / On Target / Over per month</small></h6>
+        <div class="legend mb-2">
+          <span><span class="leg-box" style="background:#dc3545"></span> Under (&lt;85%)</span>
+          <span><span class="leg-box" style="background:#28a745"></span> On Target (85–115%)</span>
+          <span><span class="leg-box" style="background:#f0ad4e"></span> Over (&gt;115%)</span>
+        </div>
+        <canvas id="cMonthly" height="180"></canvas>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="card-box">
+        <h6>Accuracy by Day of Week &nbsp;<small class="fw-normal text-muted">avg across selected period</small></h6>
+        <canvas id="cDow" height="180"></canvas>
       </div>
     </div>
   </div>
@@ -398,21 +409,77 @@ function agg(rows, keyFn) {
 }
 
 // ── Charts ────────────────────────────────────────────────────────────────────
-let cC, cQ, cD;
+let cC, cQ, cMon, cDow;
 
-const refLinePlugin = {
-  id:'refLine',
-  afterDraw(chart) {
-    if (chart.canvas.id !== 'cDaily') return;
-    const {ctx, scales:{x,y}} = chart;
-    const yp = y.getPixelForValue(100);
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(x.left, yp); ctx.lineTo(x.right, yp);
-    ctx.strokeStyle='#dc3545'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
-    ctx.stroke(); ctx.restore();
-  }
-};
-Chart.register(refLinePlugin);
+// ── Monthly target achievement chart ─────────────────────────────────────────
+function buildMonthlyChart() {
+  const rows = filt(DAILY);
+
+  // Aggregate DAILY rows by Date first
+  const dateMap = {};
+  rows.forEach(r => {
+    if (!dateMap[r.Date]) dateMap[r.Date] = {a:0, f:0};
+    dateMap[r.Date].a += r.Actual_Sum;
+    dateMap[r.Date].f += r.Forecast_Sum;
+  });
+
+  // Bucket each day into Under / On / Over per month
+  const monthMap = {};
+  Object.entries(dateMap).forEach(([d, {a, f}]) => {
+    if (f <= 0) return;
+    const mk = d.slice(0, 7);
+    if (!monthMap[mk]) monthMap[mk] = {under:0, on:0, over:0};
+    const acc = a / f * 100;
+    if      (acc < 85)  monthMap[mk].under++;
+    else if (acc > 115) monthMap[mk].over++;
+    else                monthMap[mk].on++;
+  });
+
+  const mKeys = Object.keys(monthMap).sort();
+  const mLabels = mKeys.map(mk => {
+    const [y, mo] = mk.split('-');
+    return MON_NAMES[+mo].slice(0,3) + " '" + y.slice(2);
+  });
+  const total   = k => monthMap[k].under + monthMap[k].on + monthMap[k].over;
+  const underPct = mKeys.map(k => +(monthMap[k].under / total(k) * 100).toFixed(1));
+  const onPct    = mKeys.map(k => +(monthMap[k].on    / total(k) * 100).toFixed(1));
+  const overPct  = mKeys.map(k => +(monthMap[k].over  / total(k) * 100).toFixed(1));
+
+  cMon.data.labels               = mLabels;
+  cMon.data.datasets[0].data     = underPct;
+  cMon.data.datasets[1].data     = onPct;
+  cMon.data.datasets[2].data     = overPct;
+  cMon.update();
+}
+
+// ── Day-of-week accuracy chart ────────────────────────────────────────────────
+function buildDowChart() {
+  const rows = filt(DAILY);
+  const DOW  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  const dateMap = {};
+  rows.forEach(r => {
+    if (!dateMap[r.Date]) dateMap[r.Date] = {a:0, f:0};
+    dateMap[r.Date].a += r.Actual_Sum;
+    dateMap[r.Date].f += r.Forecast_Sum;
+  });
+
+  const dowBuckets = [[], [], [], [], [], [], []]; // Mon=0 … Sun=6
+  Object.entries(dateMap).forEach(([d, {a, f}]) => {
+    if (f <= 0) return;
+    const jsDay  = new Date(d + 'T00:00:00').getDay(); // 0=Sun…6=Sat
+    const isoDay = jsDay === 0 ? 6 : jsDay - 1;        // Mon=0…Sun=6
+    dowBuckets[isoDay].push(a / f * 100);
+  });
+
+  const vals = dowBuckets.map(arr =>
+    arr.length ? +(arr.reduce((s,v)=>s+v,0) / arr.length).toFixed(1) : null
+  );
+
+  cDow.data.datasets[0].data            = vals;
+  cDow.data.datasets[0].backgroundColor = vals.map(v => v === null ? '#e9ecef' : clr(v));
+  cDow.update();
+}
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
 function buildHeatmap() {
@@ -685,13 +752,8 @@ function refresh() {
   cQ.data.datasets[0].backgroundColor = qVals.map(clr);
   cQ.update();
 
-  // Daily chart — aggregate filtered rows by date
-  const dMap  = agg(rows, r=>r.Date);
-  const dKeys = Object.keys(dMap).sort();
-  const dVals = dKeys.map(k=>+(dMap[k].a/dMap[k].f*100).toFixed(2));
-  cD.data.labels = dKeys;
-  cD.data.datasets[0].data = dVals;
-  cD.update();
+  buildMonthlyChart();
+  buildDowChart();
 
   // Detail table — re-aggregate DAILY rows to LOB×Queue×Language level
   const detMap = {};
@@ -749,22 +811,51 @@ document.addEventListener('DOMContentLoaded', () => {
     type:'bar', data:{labels:[],datasets:[{data:[],borderRadius:4}]},
     options: hbar(70,140)
   });
-  cD = new Chart(document.getElementById('cDaily'), {
-    type:'line',
-    data:{labels:[],datasets:[{
-      label:'Accuracy %', data:[],
-      borderColor:'#16213e', backgroundColor:'rgba(22,33,62,.09)',
-      fill:true, tension:.3, pointRadius:2, pointHoverRadius:5
-    }]},
+  cMon = new Chart(document.getElementById('cMonthly'), {
+    type:'bar',
+    data:{
+      labels:[],
+      datasets:[
+        {label:'Under (<85%)',      data:[], backgroundColor:'#dc3545', stack:'s'},
+        {label:'On Target (85–115%)',data:[], backgroundColor:'#28a745', stack:'s'},
+        {label:'Over (>115%)',       data:[], backgroundColor:'#f0ad4e', stack:'s'}
+      ]
+    },
     options:{
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>pct(c.raw)}} },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}}
+      },
       scales:{
-        x:{ticks:{maxTicksLimit:30,maxRotation:45,font:{size:10}}},
-        y:{ticks:{callback:v=>v+'%'}}
+        x:{stacked:true},
+        y:{stacked:true, min:0, max:100, ticks:{callback:v=>v+'%'}}
       }
     }
   });
 
+  cDow = new Chart(document.getElementById('cDow'), {
+    type:'bar',
+    data:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[{
+        label:'Avg Accuracy', data:[], backgroundColor:[], borderRadius:5
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>c.raw !== null ? pct(c.raw) : 'No data'}}
+      },
+      scales:{
+        x:{min:70, max:130, ticks:{callback:v=>v+'%'}},
+        y:{ticks:{font:{size:11}}}
+      }
+    }
+  });
+
+  buildMonthlyChart();
+  buildDowChart();
   buildHeatmap();
   buildDailyTable();
   buildWeeklyTable();
