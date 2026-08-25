@@ -68,13 +68,23 @@
 
   .legend { display:flex; gap:12px; align-items:center; font-size:.75rem; margin-top:8px; }
   .leg-box { width:14px; height:14px; border-radius:3px; display:inline-block; }
+
+  /* Date filter month groups */
+  .ms-month-row { display:flex; align-items:center; background:#f0f2f5; border-top:1px solid #e9ecef; }
+  .ms-month-row:first-child { border-top:none; }
+  .ms-month-hdr { flex:1; padding:6px 10px; font-weight:700; font-size:.79rem; color:#16213e; cursor:pointer; user-select:none; }
+  .ms-month-hdr:hover { background:#dfe3e8; }
+  .ms-msel { display:flex; gap:5px; padding:0 8px; }
+  .ms-msel span { cursor:pointer; padding:2px 6px; border-radius:3px; font-size:.7rem; background:#dfe3e8; color:#16213e; }
+  .ms-msel span:hover { background:#c9d0da; }
+  .ms-opt-sm { padding:4px 14px 4px 22px; font-size:.78rem; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 22:26</span>
+  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:09</span>
 </div>
 
 <!-- Filters -->
@@ -102,7 +112,7 @@
           <span class="ms-caret">&#9660;</span>
         </button>
         <div class="ms-panel" id="panel-queue">
-          <label class='ms-opt'><input type='checkbox' value='Default' onchange="cbChange('dd-queue','lbl-queue','All Queues')"> Default</label><label class='ms-opt'><input type='checkbox' value='T-Mart' onchange="cbChange('dd-queue','lbl-queue','All Queues')"> T-Mart</label><label class='ms-opt'><input type='checkbox' value='T-Pro' onchange="cbChange('dd-queue','lbl-queue','All Queues')"> T-Pro</label>
+          <label class='ms-opt'><input type='checkbox' value='Default' onchange="queueCbChange()"> Default</label><label class='ms-opt'><input type='checkbox' value='T-Mart' onchange="queueCbChange()"> T-Mart</label><label class='ms-opt'><input type='checkbox' value='T-Pro' onchange="queueCbChange()"> T-Pro</label>
         </div>
       </div>
     </div>
@@ -116,6 +126,19 @@
         </button>
         <div class="ms-panel" id="panel-lang">
           <label class='ms-opt'><input type='checkbox' value='ARA' onchange="cbChange('dd-lang','lbl-lang','All Languages')"> ARA</label><label class='ms-opt'><input type='checkbox' value='ENG' onchange="cbChange('dd-lang','lbl-lang','All Languages')"> ENG</label><label class='ms-opt'><input type='checkbox' value='KUR' onchange="cbChange('dd-lang','lbl-lang','All Languages')"> KUR</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-auto">
+      <label class="form-label mb-1 fw-semibold" style="font-size:.78rem">Date</label><br>
+      <div class="ms-dd" id="dd-date">
+        <button class="ms-btn" type="button" onclick="toggleDd('dd-date')" style="min-width:155px">
+          <span id="lbl-date">All Dates</span>
+          <span class="ms-caret">&#9660;</span>
+        </button>
+        <div class="ms-panel" id="panel-date" style="min-width:230px;max-height:340px;overflow-y:auto;padding:0">
+          <div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202608')"><span id='mi202608'>&#9658;</span> August 2026</div><div class='ms-msel'><span onclick="selMonth('202608',true)">All</span><span onclick="selMonth('202608',false)">None</span></div></div><div id='mdates202608' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-01' onchange='dateCbChange()'> Aug 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-02' onchange='dateCbChange()'> Aug 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-03' onchange='dateCbChange()'> Aug 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-04' onchange='dateCbChange()'> Aug 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-05' onchange='dateCbChange()'> Aug 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-06' onchange='dateCbChange()'> Aug 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-07' onchange='dateCbChange()'> Aug 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-08' onchange='dateCbChange()'> Aug 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-09' onchange='dateCbChange()'> Aug 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-10' onchange='dateCbChange()'> Aug 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-11' onchange='dateCbChange()'> Aug 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-12' onchange='dateCbChange()'> Aug 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-13' onchange='dateCbChange()'> Aug 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-14' onchange='dateCbChange()'> Aug 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-15' onchange='dateCbChange()'> Aug 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-16' onchange='dateCbChange()'> Aug 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-17' onchange='dateCbChange()'> Aug 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-18' onchange='dateCbChange()'> Aug 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-19' onchange='dateCbChange()'> Aug 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-20' onchange='dateCbChange()'> Aug 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-21' onchange='dateCbChange()'> Aug 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-22' onchange='dateCbChange()'> Aug 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-23' onchange='dateCbChange()'> Aug 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-24' onchange='dateCbChange()'> Aug 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-08-25' onchange='dateCbChange()'> Aug 25</label></div><div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202607')"><span id='mi202607'>&#9658;</span> July 2026</div><div class='ms-msel'><span onclick="selMonth('202607',true)">All</span><span onclick="selMonth('202607',false)">None</span></div></div><div id='mdates202607' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-01' onchange='dateCbChange()'> Jul 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-02' onchange='dateCbChange()'> Jul 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-03' onchange='dateCbChange()'> Jul 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-04' onchange='dateCbChange()'> Jul 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-05' onchange='dateCbChange()'> Jul 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-06' onchange='dateCbChange()'> Jul 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-07' onchange='dateCbChange()'> Jul 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-08' onchange='dateCbChange()'> Jul 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-09' onchange='dateCbChange()'> Jul 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-10' onchange='dateCbChange()'> Jul 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-11' onchange='dateCbChange()'> Jul 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-12' onchange='dateCbChange()'> Jul 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-13' onchange='dateCbChange()'> Jul 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-14' onchange='dateCbChange()'> Jul 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-15' onchange='dateCbChange()'> Jul 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-16' onchange='dateCbChange()'> Jul 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-17' onchange='dateCbChange()'> Jul 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-18' onchange='dateCbChange()'> Jul 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-19' onchange='dateCbChange()'> Jul 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-20' onchange='dateCbChange()'> Jul 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-21' onchange='dateCbChange()'> Jul 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-22' onchange='dateCbChange()'> Jul 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-23' onchange='dateCbChange()'> Jul 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-24' onchange='dateCbChange()'> Jul 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-25' onchange='dateCbChange()'> Jul 25</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-26' onchange='dateCbChange()'> Jul 26</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-27' onchange='dateCbChange()'> Jul 27</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-28' onchange='dateCbChange()'> Jul 28</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-29' onchange='dateCbChange()'> Jul 29</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-30' onchange='dateCbChange()'> Jul 30</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-07-31' onchange='dateCbChange()'> Jul 31</label></div><div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202606')"><span id='mi202606'>&#9658;</span> June 2026</div><div class='ms-msel'><span onclick="selMonth('202606',true)">All</span><span onclick="selMonth('202606',false)">None</span></div></div><div id='mdates202606' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-01' onchange='dateCbChange()'> Jun 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-02' onchange='dateCbChange()'> Jun 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-03' onchange='dateCbChange()'> Jun 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-04' onchange='dateCbChange()'> Jun 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-05' onchange='dateCbChange()'> Jun 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-06' onchange='dateCbChange()'> Jun 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-07' onchange='dateCbChange()'> Jun 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-08' onchange='dateCbChange()'> Jun 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-09' onchange='dateCbChange()'> Jun 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-10' onchange='dateCbChange()'> Jun 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-11' onchange='dateCbChange()'> Jun 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-12' onchange='dateCbChange()'> Jun 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-13' onchange='dateCbChange()'> Jun 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-14' onchange='dateCbChange()'> Jun 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-15' onchange='dateCbChange()'> Jun 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-16' onchange='dateCbChange()'> Jun 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-17' onchange='dateCbChange()'> Jun 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-18' onchange='dateCbChange()'> Jun 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-19' onchange='dateCbChange()'> Jun 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-20' onchange='dateCbChange()'> Jun 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-21' onchange='dateCbChange()'> Jun 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-22' onchange='dateCbChange()'> Jun 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-23' onchange='dateCbChange()'> Jun 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-24' onchange='dateCbChange()'> Jun 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-25' onchange='dateCbChange()'> Jun 25</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-26' onchange='dateCbChange()'> Jun 26</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-27' onchange='dateCbChange()'> Jun 27</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-28' onchange='dateCbChange()'> Jun 28</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-29' onchange='dateCbChange()'> Jun 29</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-06-30' onchange='dateCbChange()'> Jun 30</label></div><div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202605')"><span id='mi202605'>&#9658;</span> May 2026</div><div class='ms-msel'><span onclick="selMonth('202605',true)">All</span><span onclick="selMonth('202605',false)">None</span></div></div><div id='mdates202605' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-01' onchange='dateCbChange()'> May 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-02' onchange='dateCbChange()'> May 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-03' onchange='dateCbChange()'> May 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-04' onchange='dateCbChange()'> May 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-05' onchange='dateCbChange()'> May 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-06' onchange='dateCbChange()'> May 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-07' onchange='dateCbChange()'> May 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-08' onchange='dateCbChange()'> May 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-09' onchange='dateCbChange()'> May 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-10' onchange='dateCbChange()'> May 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-11' onchange='dateCbChange()'> May 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-12' onchange='dateCbChange()'> May 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-13' onchange='dateCbChange()'> May 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-14' onchange='dateCbChange()'> May 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-15' onchange='dateCbChange()'> May 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-16' onchange='dateCbChange()'> May 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-17' onchange='dateCbChange()'> May 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-18' onchange='dateCbChange()'> May 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-19' onchange='dateCbChange()'> May 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-20' onchange='dateCbChange()'> May 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-21' onchange='dateCbChange()'> May 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-22' onchange='dateCbChange()'> May 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-23' onchange='dateCbChange()'> May 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-24' onchange='dateCbChange()'> May 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-25' onchange='dateCbChange()'> May 25</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-26' onchange='dateCbChange()'> May 26</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-27' onchange='dateCbChange()'> May 27</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-28' onchange='dateCbChange()'> May 28</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-29' onchange='dateCbChange()'> May 29</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-30' onchange='dateCbChange()'> May 30</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-05-31' onchange='dateCbChange()'> May 31</label></div><div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202604')"><span id='mi202604'>&#9658;</span> April 2026</div><div class='ms-msel'><span onclick="selMonth('202604',true)">All</span><span onclick="selMonth('202604',false)">None</span></div></div><div id='mdates202604' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-01' onchange='dateCbChange()'> Apr 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-02' onchange='dateCbChange()'> Apr 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-03' onchange='dateCbChange()'> Apr 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-04' onchange='dateCbChange()'> Apr 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-05' onchange='dateCbChange()'> Apr 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-06' onchange='dateCbChange()'> Apr 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-07' onchange='dateCbChange()'> Apr 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-08' onchange='dateCbChange()'> Apr 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-09' onchange='dateCbChange()'> Apr 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-10' onchange='dateCbChange()'> Apr 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-11' onchange='dateCbChange()'> Apr 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-12' onchange='dateCbChange()'> Apr 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-13' onchange='dateCbChange()'> Apr 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-14' onchange='dateCbChange()'> Apr 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-15' onchange='dateCbChange()'> Apr 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-16' onchange='dateCbChange()'> Apr 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-17' onchange='dateCbChange()'> Apr 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-18' onchange='dateCbChange()'> Apr 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-19' onchange='dateCbChange()'> Apr 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-20' onchange='dateCbChange()'> Apr 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-21' onchange='dateCbChange()'> Apr 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-22' onchange='dateCbChange()'> Apr 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-23' onchange='dateCbChange()'> Apr 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-24' onchange='dateCbChange()'> Apr 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-25' onchange='dateCbChange()'> Apr 25</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-26' onchange='dateCbChange()'> Apr 26</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-27' onchange='dateCbChange()'> Apr 27</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-28' onchange='dateCbChange()'> Apr 28</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-29' onchange='dateCbChange()'> Apr 29</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-04-30' onchange='dateCbChange()'> Apr 30</label></div><div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202603')"><span id='mi202603'>&#9658;</span> March 2026</div><div class='ms-msel'><span onclick="selMonth('202603',true)">All</span><span onclick="selMonth('202603',false)">None</span></div></div><div id='mdates202603' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-01' onchange='dateCbChange()'> Mar 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-02' onchange='dateCbChange()'> Mar 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-03' onchange='dateCbChange()'> Mar 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-04' onchange='dateCbChange()'> Mar 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-05' onchange='dateCbChange()'> Mar 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-06' onchange='dateCbChange()'> Mar 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-07' onchange='dateCbChange()'> Mar 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-08' onchange='dateCbChange()'> Mar 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-09' onchange='dateCbChange()'> Mar 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-10' onchange='dateCbChange()'> Mar 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-11' onchange='dateCbChange()'> Mar 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-12' onchange='dateCbChange()'> Mar 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-13' onchange='dateCbChange()'> Mar 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-14' onchange='dateCbChange()'> Mar 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-15' onchange='dateCbChange()'> Mar 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-16' onchange='dateCbChange()'> Mar 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-17' onchange='dateCbChange()'> Mar 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-18' onchange='dateCbChange()'> Mar 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-19' onchange='dateCbChange()'> Mar 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-20' onchange='dateCbChange()'> Mar 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-21' onchange='dateCbChange()'> Mar 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-22' onchange='dateCbChange()'> Mar 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-23' onchange='dateCbChange()'> Mar 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-24' onchange='dateCbChange()'> Mar 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-25' onchange='dateCbChange()'> Mar 25</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-26' onchange='dateCbChange()'> Mar 26</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-27' onchange='dateCbChange()'> Mar 27</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-28' onchange='dateCbChange()'> Mar 28</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-29' onchange='dateCbChange()'> Mar 29</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-30' onchange='dateCbChange()'> Mar 30</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-03-31' onchange='dateCbChange()'> Mar 31</label></div><div class='ms-month-row'><div class='ms-month-hdr' onclick="toggleMth('202602')"><span id='mi202602'>&#9658;</span> February 2026</div><div class='ms-msel'><span onclick="selMonth('202602',true)">All</span><span onclick="selMonth('202602',false)">None</span></div></div><div id='mdates202602' style='display:none'><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-01' onchange='dateCbChange()'> Feb 1</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-02' onchange='dateCbChange()'> Feb 2</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-03' onchange='dateCbChange()'> Feb 3</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-04' onchange='dateCbChange()'> Feb 4</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-05' onchange='dateCbChange()'> Feb 5</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-06' onchange='dateCbChange()'> Feb 6</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-07' onchange='dateCbChange()'> Feb 7</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-08' onchange='dateCbChange()'> Feb 8</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-09' onchange='dateCbChange()'> Feb 9</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-10' onchange='dateCbChange()'> Feb 10</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-11' onchange='dateCbChange()'> Feb 11</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-12' onchange='dateCbChange()'> Feb 12</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-13' onchange='dateCbChange()'> Feb 13</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-14' onchange='dateCbChange()'> Feb 14</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-15' onchange='dateCbChange()'> Feb 15</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-16' onchange='dateCbChange()'> Feb 16</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-17' onchange='dateCbChange()'> Feb 17</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-18' onchange='dateCbChange()'> Feb 18</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-19' onchange='dateCbChange()'> Feb 19</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-20' onchange='dateCbChange()'> Feb 20</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-21' onchange='dateCbChange()'> Feb 21</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-22' onchange='dateCbChange()'> Feb 22</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-23' onchange='dateCbChange()'> Feb 23</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-24' onchange='dateCbChange()'> Feb 24</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-25' onchange='dateCbChange()'> Feb 25</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-26' onchange='dateCbChange()'> Feb 26</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-27' onchange='dateCbChange()'> Feb 27</label><label class='ms-opt ms-opt-sm'><input type='checkbox' name='dtcb' value='2026-02-28' onchange='dateCbChange()'> Feb 28</label></div>
         </div>
       </div>
     </div>
@@ -265,15 +288,78 @@ function getSelected(ddId) {
   return [...document.querySelectorAll('#' + ddId + ' input:checked')].map(i => i.value);
 }
 
+function getSelectedDates() {
+  return [...document.querySelectorAll('input[name=dtcb]:checked')].map(i => i.value);
+}
+
 function filt(data) {
   const lo = getSelected('dd-lob');
   const q  = getSelected('dd-queue');
   const l  = getSelected('dd-lang');
+  const dt = getSelectedDates();
   return data.filter(r =>
     (!lo.length || lo.includes(r.LOB)) &&
     (!q.length  || q.includes(r.Queue)) &&
-    (!l.length  || l.includes(r.Language))
+    (!l.length  || l.includes(r.Language)) &&
+    (!dt.length || dt.includes(r.Date))
   );
+}
+
+// ── Queue change: update language options (hide KUR for T-Pro only) ───────────
+function queueCbChange() {
+  cbChange('dd-queue', 'lbl-queue', 'All Queues');
+  const q = getSelected('dd-queue');
+  const tproOnly = q.length > 0 && q.every(v => v === 'T-Pro');
+  const kurCb  = document.querySelector('#dd-lang input[value="KUR"]');
+  if (!kurCb) return;
+  const kurLbl = kurCb.closest('label');
+  if (tproOnly) {
+    kurLbl.style.display = 'none';
+    if (kurCb.checked) {
+      kurCb.checked = false;
+      cbChange('dd-lang', 'lbl-lang', 'All Languages');
+    }
+  } else {
+    kurLbl.style.display = '';
+  }
+}
+
+// ── Date filter functions ─────────────────────────────────────────────────────
+function toggleMth(safe) {
+  const panel = document.getElementById('mdates' + safe);
+  const icon  = document.getElementById('mi' + safe);
+  const open  = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  icon.innerHTML = open ? '&#9658;' : '&#9660;';
+}
+
+function selMonth(safe, sel) {
+  document.querySelectorAll('#mdates' + safe + ' input[type=checkbox]').forEach(cb => cb.checked = sel);
+  dateCbChange();
+}
+
+function dateCbChange() {
+  const vals = [...document.querySelectorAll('input[name=dtcb]:checked')].map(i => i.value);
+  let label = 'All Dates';
+  if (vals.length > 0) {
+    const months = [...new Set(vals.map(d => d.slice(0,7)))];
+    if (months.length === 1) {
+      const mk = months[0].replace('-','');
+      const allInMonth = [...document.querySelectorAll('#mdates' + mk + ' input[type=checkbox]')];
+      if (allInMonth.length > 0 && allInMonth.every(cb => cb.checked)) {
+        const parts = months[0].split('-');
+        const mNames = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',
+                         7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'};
+        label = mNames[+parts[1]] + ' ' + parts[0];
+      } else {
+        label = vals.length + (vals.length > 1 ? ' days' : ' day') + ' selected';
+      }
+    } else {
+      label = vals.length + (vals.length > 1 ? ' days' : ' day') + ' selected';
+    }
+  }
+  document.getElementById('lbl-date').textContent = label;
+  refresh();
 }
 
 function agg(rows, keyFn) {
@@ -309,11 +395,13 @@ function buildHeatmap() {
   const lo = getSelected('dd-lob');
   const q  = getSelected('dd-queue');
   const l  = getSelected('dd-lang');
+  const dt = getSelectedDates();
 
   const rows = INTV_FULL.filter(r =>
     (!lo.length || lo.includes(r.LOB)) &&
     (!q.length  || q.includes(r.Queue)) &&
-    (!l.length  || l.includes(r.Language))
+    (!l.length  || l.includes(r.Language)) &&
+    (!dt.length || dt.includes(r.Date))
   );
 
   // Aggregate filtered rows by Date + Interval
@@ -371,8 +459,8 @@ function buildHeatmap() {
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
 function refresh() {
-  const rows  = filt(LANG);
-  const drows = filt(DAILY);
+  // Use DAILY (has Date field) so date filter applies to KPIs, charts, and table
+  const rows = filt(DAILY);
 
   // KPIs
   const totA = rows.reduce((s,r)=>s+r.Actual_Sum,0);
@@ -404,36 +492,49 @@ function refresh() {
   cQ.data.datasets[0].backgroundColor = qVals.map(clr);
   cQ.update();
 
-  // Daily chart
-  const dMap  = agg(drows, r=>r.Date);
+  // Daily chart — aggregate filtered rows by date
+  const dMap  = agg(rows, r=>r.Date);
   const dKeys = Object.keys(dMap).sort();
   const dVals = dKeys.map(k=>+(dMap[k].a/dMap[k].f*100).toFixed(2));
   cD.data.labels = dKeys;
   cD.data.datasets[0].data = dVals;
   cD.update();
 
-  // Detail table
+  // Detail table — re-aggregate DAILY rows to LOB×Queue×Language level
+  const detMap = {};
+  rows.forEach(r => {
+    const k = r.LOB + '|' + r.Queue + '|' + r.Language;
+    if (!detMap[k]) detMap[k] = {LOB:r.LOB, Queue:r.Queue, Language:r.Language, a:0, f:0};
+    detMap[k].a += r.Actual_Sum;
+    detMap[k].f += r.Forecast_Sum;
+  });
   const tbody = document.getElementById('tBody');
   tbody.innerHTML = '';
-  [...rows].sort((a,b)=>a.LOB.localeCompare(b.LOB)||a.Queue.localeCompare(b.Queue))
-  .forEach(r => {
-    tbody.innerHTML += `<tr>
-      <td>${r.LOB}</td><td>${r.Queue}</td><td>${r.Language}</td>
-      <td class="text-end">${fmt(r.Actual_Sum)}</td>
-      <td class="text-end">${fmt(r.Forecast_Sum)}</td>
-      <td class="text-center">${badge(r['Accuracy_%'])}</td>
-    </tr>`;
-  });
+  Object.values(detMap)
+    .sort((a,b) => a.LOB.localeCompare(b.LOB) || a.Queue.localeCompare(b.Queue))
+    .forEach(r => {
+      const ac = r.f > 0 ? r.a / r.f * 100 : 0;
+      tbody.innerHTML += `<tr>
+        <td>${r.LOB}</td><td>${r.Queue}</td><td>${r.Language}</td>
+        <td class="text-end">${fmt(r.a)}</td>
+        <td class="text-end">${fmt(r.f)}</td>
+        <td class="text-center">${badge(ac)}</td>
+      </tr>`;
+    });
 
-  // Heatmap also responds to filters
   buildHeatmap();
 }
 
 function resetFilters() {
   document.querySelectorAll('.ms-dd input[type=checkbox]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('input[name=dtcb]').forEach(cb => cb.checked = false);
   document.getElementById('lbl-lob').textContent   = 'All LOBs';
   document.getElementById('lbl-queue').textContent = 'All Queues';
   document.getElementById('lbl-lang').textContent  = 'All Languages';
+  document.getElementById('lbl-date').textContent  = 'All Dates';
+  // Restore KUR visibility
+  const kurCb = document.querySelector('#dd-lang input[value="KUR"]');
+  if (kurCb) kurCb.closest('label').style.display = '';
   refresh();
 }
 
