@@ -88,7 +88,7 @@
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:26</span>
+  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-25 23:35</span>
 </div>
 
 <!-- Filters -->
@@ -541,12 +541,19 @@ function buildDailyTable() {
 
 // ── Weekly accuracy table ─────────────────────────────────────────────────────
 
-// Return Monday of the week containing dateStr
+// Use local date parts — toISOString() returns UTC and shifts dates back by 1 day in UTC+ timezones
+function localDateStr(d) {
+  return d.getFullYear() + '-'
+       + String(d.getMonth() + 1).padStart(2, '0') + '-'
+       + String(d.getDate()).padStart(2, '0');
+}
+
+// Return Monday of the week containing dateStr (local time — no UTC shift bug)
 function weekMonday(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
-  const day = d.getDay(); // 0=Sun
+  const day = d.getDay(); // 0=Sun, 1=Mon … 6=Sat
   d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-  return d.toISOString().slice(0, 10);
+  return localDateStr(d);
 }
 
 // ISO week number (W01–W53) using the Thursday-of-the-week rule
@@ -625,7 +632,7 @@ function buildWeeklyTable() {
     weeks.forEach(ws => {
       const sunDate = new Date(ws + 'T00:00:00');
       sunDate.setDate(sunDate.getDate() + 6);
-      const sunStr = sunDate.toISOString().slice(0, 10);
+      const sunStr = localDateStr(sunDate); // local date — avoids UTC shift in UTC+ zones
       const {a, f} = weekMap[ws];
       const ac = f > 0 ? a/f*100 : 0;
       const wn = String(isoWeekNum(ws)).padStart(2, '0');
