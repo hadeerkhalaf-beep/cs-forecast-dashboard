@@ -89,7 +89,7 @@
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
   <div style="display:flex;align-items:center;gap:14px">
-    <span class="ts">Last generated: 2026-08-26 12:44</span>
+    <span class="ts">Last generated: 2026-08-26 12:55</span>
     <button id="refreshBtn" onclick="triggerRefresh()"
       style="background:#fff;color:#16213e;border:none;border-radius:6px;
              padding:5px 14px;font-size:.8rem;font-weight:700;cursor:pointer;
@@ -913,7 +913,7 @@ function pollRefresh() {
           btn.disabled = false;
           if (d.success) {
             msg.textContent = 'Done! Reloading …';
-            setTimeout(() => location.reload(), 1500);
+            setTimeout(() => { window.location.href = '/?t=' + Date.now(); }, 1500);
           }
         }
       })
