@@ -88,7 +88,16 @@
 
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
-  <span class="ts">Auto-refreshes every hour &nbsp;|&nbsp; Last generated: 2026-08-26 00:13</span>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="ts">Last generated: 2026-08-26 12:26</span>
+    <button id="refreshBtn" onclick="triggerRefresh()"
+      style="background:#fff;color:#16213e;border:none;border-radius:6px;
+             padding:5px 14px;font-size:.8rem;font-weight:700;cursor:pointer;
+             display:flex;align-items:center;gap:6px">
+      <span id="refreshIcon">&#8635;</span> Refresh Data
+    </button>
+    <span id="refreshMsg" style="color:#adb5bd;font-size:.75rem;max-width:260px"></span>
+  </div>
 </div>
 
 <!-- Filters -->
@@ -861,6 +870,60 @@ document.addEventListener('DOMContentLoaded', () => {
   buildWeeklyTable();
   refresh();
 });
+
+// ── Refresh pipeline button ───────────────────────────────────────────────────
+const LOCAL = 'http://localhost:8765';
+let _polling = false;
+
+function triggerRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  const msg = document.getElementById('refreshMsg');
+  const ico = document.getElementById('refreshIcon');
+  btn.disabled = true;
+  msg.textContent = 'Connecting …';
+
+  fetch(LOCAL + '/refresh', {signal: AbortSignal.timeout(3000)})
+    .then(r => r.json())
+    .then(() => {
+      ico.style.animation = 'spin 1s linear infinite';
+      pollRefresh();
+    })
+    .catch(() => {
+      msg.textContent = 'To use this button open the dashboard via "Start Dashboard.bat"';
+      btn.disabled = false;
+    });
+}
+
+function pollRefresh() {
+  if (_polling) return;
+  _polling = true;
+  const msg = document.getElementById('refreshMsg');
+  const btn = document.getElementById('refreshBtn');
+  const ico = document.getElementById('refreshIcon');
+
+  const iv = setInterval(() => {
+    fetch(LOCAL + '/status', {signal: AbortSignal.timeout(3000)})
+      .then(r => r.json())
+      .then(d => {
+        msg.textContent = d.message;
+        if (!d.running) {
+          clearInterval(iv);
+          _polling = false;
+          ico.style.animation = '';
+          btn.disabled = false;
+          if (d.success) {
+            msg.textContent = 'Done! Reloading …';
+            setTimeout(() => location.reload(), 1500);
+          }
+        }
+      })
+      .catch(() => { clearInterval(iv); _polling = false; btn.disabled = false; });
+  }, 1500);
+}
 </script>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #refreshIcon { display:inline-block; font-size:1rem; }
+</style>
 </body>
 </html>
