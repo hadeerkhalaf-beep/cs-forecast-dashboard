@@ -107,7 +107,7 @@
 <div class="topbar">
   <h1>CS Forecast Accuracy Dashboard</h1>
   <div style="display:flex;align-items:center;gap:14px">
-    <span class="ts">Last generated: 2026-08-26 16:17</span>
+    <span class="ts">Last generated: 2026-08-26 16:38</span>
     <button id="refreshBtn" onclick="triggerRefresh()"
       style="background:#fff;color:#16213e;border:none;border-radius:6px;
              padding:5px 14px;font-size:.8rem;font-weight:700;cursor:pointer;
@@ -951,15 +951,54 @@ function buildAnalysis() {
   // ── LOB aggregation ────────────────────────────────────────────────────────
   const lobMap = agg(rows, r=>r.LOB);
   const lobEntries = Object.entries(lobMap).map(([k,v])=>{return {name:k, acc:v.a/v.f*100};});
-  const bestLOB  = lobEntries.reduce((b,e)=>Math.abs(e.acc-100)<Math.abs(b.acc-100)?e:b, lobEntries[0]);
-  const worstLOB = lobEntries.reduce((w,e)=>Math.abs(e.acc-100)>Math.abs(w.acc-100)?e:w, lobEntries[0]);
+  // Count on-target days per LOB (days where LOB daily accuracy is between 85% and 115%)
+  const lobDayGood = {};
+  const lobDayMapPre = {};
+  rows.forEach(r=>{
+    const key=r.LOB+'|'+r.Date;
+    if(!lobDayMapPre[key]) lobDayMapPre[key]={lob:r.LOB,a:0,f:0};
+    lobDayMapPre[key].a+=r.Actual_Sum; lobDayMapPre[key].f+=r.Forecast_Sum;
+  });
+  Object.values(lobDayMapPre).forEach(v=>{
+    const acc=v.f>0?v.a/v.f*100:100;
+    if(!lobDayGood[v.lob]) lobDayGood[v.lob]=0;
+    if(acc>=85&&acc<=115) lobDayGood[v.lob]++;
+  });
+  const bestLOBEntry = Object.entries(lobDayGood).reduce((b,[l,c])=>c>b[1]?[l,c]:b, [lobEntries[0]?lobEntries[0].name:'-',0]);
+  const bestLOB = {name: bestLOBEntry[0], goodDays: bestLOBEntry[1]};
+  // Count off-target days per LOB (days where LOB daily accuracy is <85% or >115%)
+  const lobDayBad = {};
+  const lobDayMap = {};
+  rows.forEach(r=>{
+    const key=r.LOB+'|'+r.Date;
+    if(!lobDayMap[key]) lobDayMap[key]={lob:r.LOB,a:0,f:0};
+    lobDayMap[key].a+=r.Actual_Sum; lobDayMap[key].f+=r.Forecast_Sum;
+  });
+  Object.values(lobDayMap).forEach(v=>{
+    const acc=v.f>0?v.a/v.f*100:100;
+    if(!lobDayBad[v.lob]) lobDayBad[v.lob]=0;
+    if(acc<85||acc>115) lobDayBad[v.lob]++;
+  });
+  const worstLOBEntry = Object.entries(lobDayBad).reduce((w,[l,c])=>c>w[1]?[l,c]:w, [lobEntries[0]?lobEntries[0].name:'-',0]);
+  const worstLOB = {name: worstLOBEntry[0], badDays: worstLOBEntry[1]};
 
   // ── Monthly aggregation ────────────────────────────────────────────────────
   const moMap = {};
   rows.forEach(r=>{ const m=r.Date.substring(0,7); if(!moMap[m]) moMap[m]={a:0,f:0}; moMap[m].a+=r.Actual_Sum; moMap[m].f+=r.Forecast_Sum; });
   const moEntries = Object.entries(moMap).map(([k,v])=>{return {month:k, acc:v.a/v.f*100};});
-  const maxDistMo = moEntries.reduce((w,e)=>Math.abs(e.acc-100)>Math.abs(w.acc-100)?e:w, moEntries[0]||{month:'-',acc:100});
-  const moName = maxDistMo.month && maxDistMo.month!=='-' ? (MNAMES[parseInt(maxDistMo.month.split('-')[1])]||maxDistMo.month) : '-';
+  // Count off-target days per month (days where daily accuracy is <85% or >115%)
+  const dayMap = {};
+  rows.forEach(r=>{ if(!dayMap[r.Date]) dayMap[r.Date]={a:0,f:0}; dayMap[r.Date].a+=r.Actual_Sum; dayMap[r.Date].f+=r.Forecast_Sum; });
+  const moBadDays = {};
+  Object.entries(dayMap).forEach(([d,v])=>{
+    const m=d.substring(0,7);
+    const acc=v.f>0?v.a/v.f*100:100;
+    if(!moBadDays[m]) moBadDays[m]=0;
+    if(acc<85||acc>115) moBadDays[m]++;
+  });
+  const maxBadMo = Object.entries(moBadDays).reduce((w,[m,c])=>c>w[1]?[m,c]:w, ['-',0]);
+  const moName = maxBadMo[0]!=='-' ? (MNAMES[parseInt(maxBadMo[0].split('-')[1])]||maxBadMo[0]) : '-';
+  const moBadCount = maxBadMo[1];
 
   // ── KPI cards ──────────────────────────────────────────────────────────────
   document.getElementById('an-kpi-row').innerHTML = `
@@ -967,13 +1006,13 @@ function buildAnalysis() {
       <div class="kpi-val" style="color:${accColor(overallAcc)}">${pct(overallAcc)}</div></div>
     <div class="kpi"><div class="kpi-label">Best LOB</div>
       <div class="kpi-val" style="color:#28a745;font-size:1.15rem">${bestLOB.name}</div>
-      <div style="font-size:.75rem;color:#6c757d">${pct(bestLOB.acc)} — closest to 100%</div></div>
+      <div style="font-size:.75rem;color:#6c757d">${bestLOB.goodDays} day${bestLOB.goodDays!==1?'s':''} within 85–115%</div></div>
     <div class="kpi"><div class="kpi-label">Worst LOB</div>
       <div class="kpi-val" style="color:#dc3545;font-size:1.15rem">${worstLOB.name}</div>
-      <div style="font-size:.75rem;color:#6c757d">${pct(worstLOB.acc)} — furthest from 100%</div></div>
-    <div class="kpi"><div class="kpi-label">Most Volatile Month</div>
+      <div style="font-size:.75rem;color:#6c757d">${worstLOB.badDays} day${worstLOB.badDays!==1?'s':''} outside 85–115%</div></div>
+    <div class="kpi"><div class="kpi-label">Most Off-Target Month</div>
       <div class="kpi-val" style="color:#dc3545;font-size:1.15rem">${moName}</div>
-      <div style="font-size:.75rem;color:#6c757d">${pct(maxDistMo.acc)} — largest deviation</div></div>
+      <div style="font-size:.75rem;color:#6c757d">${moBadCount} day${moBadCount!==1?'s':''} outside 85–115%</div></div>
   `;
 
   // ── Chart factory ──────────────────────────────────────────────────────────
